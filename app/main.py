@@ -1,16 +1,20 @@
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from app.config import settings
 from app.utils import extract_text_from_cv
 from app.services import analyze_with_gemini
 from app.schemas import AnalysisResponse
+import os
 
 app = FastAPI(title="CV Analyzer API")
 
-# Allow CORS for frontend
+# CORS (adjust when you deploy your frontend)
+ALLOWED_ORIGINS = [
+    os.getenv("FRONTEND_ORIGIN", "http://localhost:3000"),
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000",  "https://cv-analyzer.vercel.app"],
+    allow_origins=ALLOWED_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -22,11 +26,7 @@ def home():
 
 @app.post("/analyze", response_model=AnalysisResponse)
 async def analyze(cv: UploadFile = File(...), jd: str = Form(...)):
-    try:
-        cv_text = extract_text_from_cv(cv)
-        if not jd.strip():
-            raise HTTPException(400, "Job description cannot be empty.")
-        result = analyze_with_gemini(cv_text, jd)
-        return result
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    cv_text = extract_text_from_cv(cv)
+    if not jd.strip():
+        raise HTTPException(status_code=400, detail="Job description cannot be empty.")
+    return analyze_with_gemini(cv_text, jd)
