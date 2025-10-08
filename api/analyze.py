@@ -13,7 +13,7 @@ origins = [
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=["*"],
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -40,7 +40,7 @@ async def analyze(cv: UploadFile = File(...), jd: str = Form(...)):
 
         client = genai.Client(api_key=os.environ.get("GEMINI_API_KEY"))
         prompt = f"""
-        Compare this candidate's CV with the job description and return JSON:
+        Compare this candidate's CV with the job description deeply with if the requirements are defined in the job description check with them, else check with the general mentioned job and return JSON:
         {{
           "fitScore": "Poor|Okay|Good|Great",
           "confidencePct": number,
